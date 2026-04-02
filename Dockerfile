@@ -2,8 +2,11 @@ FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
-COPY target/demo-0.0.1-SNAPSHOT.jar app.jar
+# Copy all project files
+COPY . .
 
-EXPOSE 8080
+# Build jar inside container
+RUN ./mvnw clean package -DskipTests
 
-ENTRYPOINT ["java","-jar","app.jar"]
+# Run the jar
+CMD ["java", "-jar", "target/demo-0.0.1-SNAPSHOT.jar"]
