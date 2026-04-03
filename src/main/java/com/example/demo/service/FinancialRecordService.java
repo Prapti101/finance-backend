@@ -17,16 +17,20 @@ public class FinancialRecordService {
         this.repo = repo;
     }
 
-    public FinancialRecord create(FinancialRecord record) {
+    // 🔹 CREATE
+    public FinancialRecord addRecord(FinancialRecord record) {
         return repo.save(record);
     }
 
+    // 🔹 GET ALL
     public List<FinancialRecord> getAll() {
         return repo.findAll();
     }
 
+    // 🔹 UPDATE
     public FinancialRecord update(Long id, FinancialRecord updated) {
-        FinancialRecord r = repo.findById(id).orElseThrow();
+        FinancialRecord r = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Record not found"));
 
         r.setAmount(updated.getAmount());
         r.setType(updated.getType());
@@ -37,24 +41,23 @@ public class FinancialRecordService {
         return repo.save(r);
     }
 
+    // 🔹 DELETE
     public void delete(Long id) {
         repo.deleteById(id);
     }
 
-    public List<FinancialRecord> filter(TransactionType type, String category,
-                                        LocalDate start, LocalDate end) {
+    // 🔹 FILTER BY TYPE
+    public List<FinancialRecord> getByType(TransactionType type) {
+        return repo.findByType(type);
+    }
 
-        if (start != null && end != null) {
-            return repo.findByDateBetween(start, end);
-        }
+    // 🔹 FILTER BY CATEGORY
+    public List<FinancialRecord> getByCategory(String category) {
+        return repo.findByCategory(category);
+    }
 
-        if (type != null && category != null) {
-            return repo.findByTypeAndCategory(type, category);
-        }
-
-        if (type != null) return repo.findByType(type);
-        if (category != null) return repo.findByCategory(category);
-
-        return repo.findAll();
+    // 🔹 FILTER BY DATE RANGE
+    public List<FinancialRecord> getByDateRange(LocalDate start, LocalDate end) {
+        return repo.findByDateBetween(start, end);
     }
 }
