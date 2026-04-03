@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.model.FinancialRecord;
 import com.example.demo.model.TransactionType;
 import com.example.demo.repository.FinancialRecordRepository;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,17 +18,15 @@ public class FinancialRecordService {
         this.repo = repo;
     }
 
-    // 🔹 CREATE
     public FinancialRecord addRecord(FinancialRecord record) {
         return repo.save(record);
     }
 
-    // 🔹 GET ALL
-    public List<FinancialRecord> getAll() {
-        return repo.findAll();
+    public Page<FinancialRecord> getPaginated(int page, int size, String sortBy) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).descending());
+        return repo.findAll(pageable);
     }
 
-    // 🔹 UPDATE
     public FinancialRecord update(Long id, FinancialRecord updated) {
         FinancialRecord r = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Record not found"));
@@ -41,23 +40,25 @@ public class FinancialRecordService {
         return repo.save(r);
     }
 
-    // 🔹 DELETE
     public void delete(Long id) {
         repo.deleteById(id);
     }
 
-    // 🔹 FILTER BY TYPE
-    public List<FinancialRecord> getByType(TransactionType type) {
-        return repo.findByType(type);
-    }
+    // 🔹 COMBINED FILTER LOGIC
+    public List<FinancialRecord> filter(TransactionType type, String category,
+                                        LocalDate start, LocalDate end) {
 
-    // 🔹 FILTER BY CATEGORY
-    public List<FinancialRecord> getByCategory(String category) {
-        return repo.findByCategory(category);
-    }
+        if (start != null && end != null) {
+            return repo.findByDateBetween(start, end);
+        }
 
-    // 🔹 FILTER BY DATE RANGE
-    public List<FinancialRecord> getByDateRange(LocalDate start, LocalDate end) {
-        return repo.findByDateBetween(start, end);
+        if (type != null && category != null) {
+            return repo.findByTypeAndCategory(type, category);
+        }
+
+        if (type != null) return repo.findByType(type);
+        if (category != null) return repo.findByCategory(category);
+
+        return repo.findAll();
     }
 }

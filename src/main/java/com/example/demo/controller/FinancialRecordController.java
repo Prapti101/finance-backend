@@ -3,6 +3,8 @@ package com.example.demo.controller;
 import com.example.demo.model.FinancialRecord;
 import com.example.demo.model.TransactionType;
 import com.example.demo.service.FinancialRecordService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,53 +21,47 @@ public class FinancialRecordController {
         this.service = service;
     }
 
-    // 🔹 CREATE → ADMIN ONLY
-    @PreAuthorize("hasRole('ADMIN')")
+    // 🔹 CREATE → ADMIN
     @PostMapping
-    public FinancialRecord createRecord(@RequestBody FinancialRecord record) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public FinancialRecord create(@Valid @RequestBody FinancialRecord record) {
         return service.addRecord(record);
     }
 
-    // 🔹 GET ALL → ALL ROLES
-    @PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
+    // 🔹 PAGINATION + SORTING
     @GetMapping
-    public List<FinancialRecord> getAllRecords() {
-        return service.getAll();
+    @PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
+    public Page<FinancialRecord> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "date") String sortBy
+    ) {
+        return service.getPaginated(page, size, sortBy);
     }
 
-    // 🔹 UPDATE → ADMIN ONLY
-    @PreAuthorize("hasRole('ADMIN')")
+    // 🔹 UPDATE → ADMIN
     @PutMapping("/{id}")
-    public FinancialRecord updateRecord(@PathVariable Long id, @RequestBody FinancialRecord record) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public FinancialRecord update(@PathVariable Long id, @RequestBody FinancialRecord record) {
         return service.update(id, record);
     }
 
-    // 🔹 DELETE → ADMIN ONLY
-    @PreAuthorize("hasRole('ADMIN')")
+    // 🔹 DELETE → ADMIN
     @DeleteMapping("/{id}")
-    public void deleteRecord(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public void delete(@PathVariable Long id) {
         service.delete(id);
     }
 
-    // 🔹 FILTER BY TYPE → ALL ROLES
+    // 🔹 COMBINED FILTER
+    @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
-    @GetMapping("/type")
-    public List<FinancialRecord> getByType(@RequestParam TransactionType type) {
-        return service.getByType(type);
-    }
-
-    // 🔹 FILTER BY CATEGORY → ALL ROLES
-    @PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
-    @GetMapping("/category")
-    public List<FinancialRecord> getByCategory(@RequestParam String category) {
-        return service.getByCategory(category);
-    }
-
-    // 🔹 FILTER BY DATE RANGE → ALL ROLES
-    @PreAuthorize("hasAnyRole('ADMIN','ANALYST','VIEWER')")
-    @GetMapping("/date")
-    public List<FinancialRecord> getByDateRange(@RequestParam LocalDate start,
-                                               @RequestParam LocalDate end) {
-        return service.getByDateRange(start, end);
+    public List<FinancialRecord> search(
+            @RequestParam(required = false) TransactionType type,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) LocalDate start,
+            @RequestParam(required = false) LocalDate end
+    ) {
+        return service.filter(type, category, start, end);
     }
 }
