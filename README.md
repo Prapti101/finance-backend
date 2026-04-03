@@ -8,7 +8,7 @@ The application allows users to create and manage financial records, apply filte
 
 ## Live API
 
-https://finance-backend-xoiq.onrender.com
+https://finance-backend-xoiq.onrender.com/dashboard
 
 Note: This is a backend-only application. The root URL may not display a UI. APIs can be accessed using tools like Postman, Thunder Client, or directly via endpoints.
 
